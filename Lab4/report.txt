@@ -1,0 +1,1662 @@
+CS4093 Constraints Programming - Report
+Jonathan O'Mahony 113763679
+
+******************************
+To implement this problem, I decided to use the Task object, alongside the cumulative scheduler built into Choco.
+To do this, I created several Choco variables:
+    - makespan: To read the maximum length of time the meetings scheduled together would take.
+    - heights: To analyse the consumption for each meeting (for this problem, each was set to 1)
+    - startOfMeetings: The start of each meeting, that I then used for input for the various search strategies.
+    - capacity: The maximum number of meetings that could be scheduled at any one time (the number of projectors)
+    - meetings: The actual array of meetings Task objects.
+
+I then iterated through each meeting to assign start and end times.
+To get the start time of each meeting, I used a second inner for loop to iterate through the earliest start time for
+each team member. Using a variable called startingPoint, initially set to 0, I checked the earliestStart array for any
+team members that had specifications on the day they could start, setting the startingPoint to this value if so.
+I then initialised each meeting Task object using this startingPoint variable, and the durations array, which together
+assigned the end day.
+I then set the heights array for each meeting to 1.
+I found the start of each meeting, assigning it to startOfMeetings.
+I then set a constraint on each array that each meeting ends before the makespan.
+
+From here, I set a cumulative scheduler using the meetings, heights and capacity variables, that at this point, have
+all been correctly initialised and set.
+
+The next task to tackle was finding a method of ensuring there was no overlap between meetings that had the same participants.
+To do this, I used an altered version of the triple for loop as demonstrated in the lecture, where I iterate through
+each meeting and person attending the meetings. If a person is attending a meeting, I iterate through the rest of the
+meetings, and ensure that there is no overlap between meetings, if that current person is to attend both. This is done
+through the use of the model.or() method.
+
+After this I implemented each of the search strategies in turn to assess which was the most successful.
+
+I also posted the constraint to minimise the makespan.
+
+In the end the results of each search were as follows for meetings3.txt:
+Default Search:
+    - No. Solutions: 4
+    - Fewest number of days needed: 15
+    - Backtracks: 147
+    - Resolution time: 0.070s
+DomOverWDegSeach:
+    - No. Solutions: 4
+    - Fewest number of days needed: 15
+    - Backtracks: 149
+    - Resolution time: 0.071s
+InputOrderLBSearch:
+    - No. Solutions: 4
+    - Fewest number of days needed: 15
+    - Backtracks: 773
+    - Resolution time: 0.196s
+ActivityBasedSearch:
+    - No. Solutions: 5
+    - Fewest number of days needed: 5
+    - Backtracks: 82
+    - Resolution time: 0.334s
+ImpactBasedSearch:
+    - No. Solutions: 6
+    - Fewest number of days needed: 15
+    - Backtracks: 429
+    - Resolution time: 0.089s
+
+From looking at this, it is clear that while ImpactBasedSearch has one of the higher backtracks count, it also provides
+more solutions, if you are looking for a number of legitimate alternatives.
+However, each search found the shortest makespan to be 15. And the seach that did this in the quickest time was
+the Default Search or DomOverWDegSearch.
+
+
+While attempting to tackle this problem, I investigated a number of methods to solve it.
+    - My initial thought was to represent the meetings and people in meetings as a matrix, and ensuring that no meetings
+        would be allowed to happen if there were more meetings happening in one day than there were projectors available.
+    - This solution worked with the assumption that the projectors were themselves the resources, rather than the capacity.
+    - Upon realising that in fact, the people assigned to meetings were the resources for the meetings, I changed my model.
+    - I initially hoped to use reification to constrain the meetings, people and projectors together. However, I struggled
+        with this model and how to make it work with the cumulative scheduler.
+        This was the reason for implementing in the way that I did.
+
+Default Search:
+
+Solution 1:
+ Number of days needed: 20
+ Meeting 0:
+ Started on day: 17
+  ended on day: 18
+ *****************************
+ Meeting 1:
+ Started on day: 5
+  ended on day: 7
+ *****************************
+ Meeting 2:
+ Started on day: 0
+  ended on day: 1
+ *****************************
+ Meeting 3:
+ Started on day: 13
+  ended on day: 16
+ *****************************
+ Meeting 4:
+ Started on day: 2
+  ended on day: 4
+ *****************************
+ Meeting 5:
+ Started on day: 0
+  ended on day: 3
+ *****************************
+ Meeting 6:
+ Started on day: 17
+  ended on day: 19
+ *****************************
+ Meeting 7:
+ Started on day: 8
+  ended on day: 10
+ *****************************
+ Meeting 8:
+ Started on day: 4
+  ended on day: 5
+ *****************************
+ Meeting 9:
+ Started on day: 9
+  ended on day: 12
+ *****************************
+ Meeting 10:
+ Started on day: 0
+  ended on day: 2
+ *****************************
+ Meeting 11:
+ Started on day: 5
+  ended on day: 8
+ *****************************
+ Meeting 12:
+ Started on day: 16
+  ended on day: 18
+ *****************************
+ Meeting 13:
+ Started on day: 3
+  ended on day: 4
+ *****************************
+ Meeting 14:
+ Started on day: 13
+  ended on day: 15
+ *****************************
+ *****************************
+
+ Solution 2:
+ Number of days needed: 19
+ Meeting 0:
+ Started on day: 17
+  ended on day: 18
+ *****************************
+ Meeting 1:
+ Started on day: 10
+  ended on day: 12
+ *****************************
+ Meeting 2:
+ Started on day: 0
+  ended on day: 1
+ *****************************
+ Meeting 3:
+ Started on day: 13
+  ended on day: 16
+ *****************************
+ Meeting 4:
+ Started on day: 2
+  ended on day: 4
+ *****************************
+ Meeting 5:
+ Started on day: 0
+  ended on day: 3
+ *****************************
+ Meeting 6:
+ Started on day: 0
+  ended on day: 2
+ *****************************
+ Meeting 7:
+ Started on day: 4
+  ended on day: 6
+ *****************************
+ Meeting 8:
+ Started on day: 3
+  ended on day: 4
+ *****************************
+ Meeting 9:
+ Started on day: 9
+  ended on day: 12
+ *****************************
+ Meeting 10:
+ Started on day: 5
+  ended on day: 7
+ *****************************
+ Meeting 11:
+ Started on day: 5
+  ended on day: 8
+ *****************************
+ Meeting 12:
+ Started on day: 16
+  ended on day: 18
+ *****************************
+ Meeting 13:
+ Started on day: 8
+  ended on day: 9
+ *****************************
+ Meeting 14:
+ Started on day: 13
+  ended on day: 15
+ *****************************
+ *****************************
+
+ Solution 3:
+ Number of days needed: 17
+ Meeting 0:
+ Started on day: 4
+  ended on day: 5
+ *****************************
+ Meeting 1:
+ Started on day: 12
+  ended on day: 14
+ *****************************
+ Meeting 2:
+ Started on day: 3
+  ended on day: 4
+ *****************************
+ Meeting 3:
+ Started on day: 0
+  ended on day: 3
+ *****************************
+ Meeting 4:
+ Started on day: 6
+  ended on day: 8
+ *****************************
+ Meeting 5:
+ Started on day: 0
+  ended on day: 3
+ *****************************
+ Meeting 6:
+ Started on day: 4
+  ended on day: 6
+ *****************************
+ Meeting 7:
+ Started on day: 8
+  ended on day: 10
+ *****************************
+ Meeting 8:
+ Started on day: 12
+  ended on day: 13
+ *****************************
+ Meeting 9:
+ Started on day: 13
+  ended on day: 16
+ *****************************
+ Meeting 10:
+ Started on day: 9
+  ended on day: 11
+ *****************************
+ Meeting 11:
+ Started on day: 9
+  ended on day: 12
+ *****************************
+ Meeting 12:
+ Started on day: 5
+  ended on day: 7
+ *****************************
+ Meeting 13:
+ Started on day: 7
+  ended on day: 8
+ *****************************
+ Meeting 14:
+ Started on day: 0
+  ended on day: 2
+ *****************************
+ *****************************
+
+ Solution 4:
+ Number of days needed: 15
+ Meeting 0:
+ Started on day: 11
+  ended on day: 12
+ *****************************
+ Meeting 1:
+ Started on day: 12
+  ended on day: 14
+ *****************************
+ Meeting 2:
+ Started on day: 0
+  ended on day: 1
+ *****************************
+ Meeting 3:
+ Started on day: 0
+  ended on day: 3
+ *****************************
+ Meeting 4:
+ Started on day: 4
+  ended on day: 6
+ *****************************
+ Meeting 5:
+ Started on day: 0
+  ended on day: 3
+ *****************************
+ Meeting 6:
+ Started on day: 4
+  ended on day: 6
+ *****************************
+ Meeting 7:
+ Started on day: 8
+  ended on day: 10
+ *****************************
+ Meeting 8:
+ Started on day: 13
+  ended on day: 14
+ *****************************
+ Meeting 9:
+ Started on day: 11
+  ended on day: 14
+ *****************************
+ Meeting 10:
+ Started on day: 7
+  ended on day: 9
+ *****************************
+ Meeting 11:
+ Started on day: 7
+  ended on day: 10
+ *****************************
+ Meeting 12:
+ Started on day: 5
+  ended on day: 7
+ *****************************
+ Meeting 13:
+ Started on day: 10
+  ended on day: 11
+ *****************************
+ Meeting 14:
+ Started on day: 2
+  ended on day: 4
+ *****************************
+ *****************************
+
+ Total number of solutions found: 4
+
+ ** Choco 4.0.2 (2017-01) : Constraint Programming Solver, Copyleft (c) 2010-2017
+ - Model[Meeting] features:
+ 	Variables : 175
+ 	Constraints : 128
+ 	Default search strategy : yes
+ 	Completed search strategy : no
+ - Complete search - 4 solution(s) found.
+ 	Model[Meeting]
+ 	Solutions: 4
+ 	MINIMIZE makespan = 15,
+ 	Building time : 0.162s
+ 	Resolution time : 0.070s
+ 	Nodes: 77 (1,095.9 n/s)
+ 	Backtracks: 147
+ 	Fails: 70
+ 	Restarts: 0
+********************************************************************************************************
+
+DomOverWDegSearch:
+
+Solution 1:
+Number of days needed: 18
+Meeting 0:
+Started on day: 15
+ ended on day: 16
+*****************************
+Meeting 1:
+Started on day: 15
+ ended on day: 17
+*****************************
+Meeting 2:
+Started on day: 8
+ ended on day: 9
+*****************************
+Meeting 3:
+Started on day: 8
+ ended on day: 11
+*****************************
+Meeting 4:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 5:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 6:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 7:
+Started on day: 4
+ ended on day: 6
+*****************************
+Meeting 8:
+Started on day: 10
+ ended on day: 11
+*****************************
+Meeting 9:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 10:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 11:
+Started on day: 4
+ ended on day: 7
+*****************************
+Meeting 12:
+Started on day: 7
+ ended on day: 9
+*****************************
+Meeting 13:
+Started on day: 10
+ ended on day: 11
+*****************************
+Meeting 14:
+Started on day: 4
+ ended on day: 6
+*****************************
+*****************************
+
+Solution 2:
+Number of days needed: 17
+Meeting 0:
+Started on day: 15
+ ended on day: 16
+*****************************
+Meeting 1:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 2:
+Started on day: 8
+ ended on day: 9
+*****************************
+Meeting 3:
+Started on day: 8
+ ended on day: 11
+*****************************
+Meeting 4:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 5:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 6:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 7:
+Started on day: 4
+ ended on day: 6
+*****************************
+Meeting 8:
+Started on day: 15
+ ended on day: 16
+*****************************
+Meeting 9:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 10:
+Started on day: 10
+ ended on day: 12
+*****************************
+Meeting 11:
+Started on day: 4
+ ended on day: 7
+*****************************
+Meeting 12:
+Started on day: 7
+ ended on day: 9
+*****************************
+Meeting 13:
+Started on day: 13
+ ended on day: 14
+*****************************
+Meeting 14:
+Started on day: 4
+ ended on day: 6
+*****************************
+*****************************
+
+Solution 3:
+Number of days needed: 16
+Meeting 0:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 1:
+Started on day: 7
+ ended on day: 9
+*****************************
+Meeting 2:
+Started on day: 8
+ ended on day: 9
+*****************************
+Meeting 3:
+Started on day: 8
+ ended on day: 11
+*****************************
+Meeting 4:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 5:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 6:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 7:
+Started on day: 4
+ ended on day: 6
+*****************************
+Meeting 8:
+Started on day: 2
+ ended on day: 3
+*****************************
+Meeting 9:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 10:
+Started on day: 13
+ ended on day: 15
+*****************************
+Meeting 11:
+Started on day: 4
+ ended on day: 7
+*****************************
+Meeting 12:
+Started on day: 10
+ ended on day: 12
+*****************************
+Meeting 13:
+Started on day: 10
+ ended on day: 11
+*****************************
+Meeting 14:
+Started on day: 4
+ ended on day: 6
+*****************************
+*****************************
+
+Solution 4:
+Number of days needed: 15
+Meeting 0:
+Started on day: 3
+ ended on day: 4
+*****************************
+Meeting 1:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 2:
+Started on day: 8
+ ended on day: 9
+*****************************
+Meeting 3:
+Started on day: 8
+ ended on day: 11
+*****************************
+Meeting 4:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 5:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 6:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 7:
+Started on day: 5
+ ended on day: 7
+*****************************
+Meeting 8:
+Started on day: 13
+ ended on day: 14
+*****************************
+Meeting 9:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 10:
+Started on day: 10
+ ended on day: 12
+*****************************
+Meeting 11:
+Started on day: 4
+ ended on day: 7
+*****************************
+Meeting 12:
+Started on day: 9
+ ended on day: 11
+*****************************
+Meeting 13:
+Started on day: 7
+ ended on day: 8
+*****************************
+Meeting 14:
+Started on day: 4
+ ended on day: 6
+*****************************
+*****************************
+
+Total number of solutions found: 4
+
+** Choco 4.0.2 (2017-01) : Constraint Programming Solver, Copyleft (c) 2010-2017
+- Model[Meeting] features:
+	Variables : 175
+	Constraints : 128
+	Default search strategy : no
+	Completed search strategy : no
+- Complete search - 4 solution(s) found.
+	Model[Meeting]
+	Solutions: 4
+	MINIMIZE makespan = 15,
+	Building time : 0.163s
+	Resolution time : 0.071s
+	Nodes: 78 (1,105.5 n/s)
+	Backtracks: 149
+	Fails: 71
+	Restarts: 0
+
+Process finished with exit code 0
+
+********************************************************************************************************
+
+InputOrderLBSearch
+
+Solution 1:
+Number of days needed: 18
+Meeting 0:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 1:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 2:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 3:
+Started on day: 2
+ ended on day: 5
+*****************************
+Meeting 4:
+Started on day: 6
+ ended on day: 8
+*****************************
+Meeting 5:
+Started on day: 2
+ ended on day: 5
+*****************************
+Meeting 6:
+Started on day: 6
+ ended on day: 8
+*****************************
+Meeting 7:
+Started on day: 9
+ ended on day: 11
+*****************************
+Meeting 8:
+Started on day: 3
+ ended on day: 4
+*****************************
+Meeting 9:
+Started on day: 9
+ ended on day: 12
+*****************************
+Meeting 10:
+Started on day: 5
+ ended on day: 7
+*****************************
+Meeting 11:
+Started on day: 13
+ ended on day: 16
+*****************************
+Meeting 12:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 13:
+Started on day: 8
+ ended on day: 9
+*****************************
+Meeting 14:
+Started on day: 15
+ ended on day: 17
+*****************************
+*****************************
+
+Solution 2:
+Number of days needed: 17
+Meeting 0:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 1:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 2:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 3:
+Started on day: 2
+ ended on day: 5
+*****************************
+Meeting 4:
+Started on day: 6
+ ended on day: 8
+*****************************
+Meeting 5:
+Started on day: 2
+ ended on day: 5
+*****************************
+Meeting 6:
+Started on day: 6
+ ended on day: 8
+*****************************
+Meeting 7:
+Started on day: 9
+ ended on day: 11
+*****************************
+Meeting 8:
+Started on day: 3
+ ended on day: 4
+*****************************
+Meeting 9:
+Started on day: 9
+ ended on day: 12
+*****************************
+Meeting 10:
+Started on day: 8
+ ended on day: 10
+*****************************
+Meeting 11:
+Started on day: 13
+ ended on day: 16
+*****************************
+Meeting 12:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 13:
+Started on day: 11
+ ended on day: 12
+*****************************
+Meeting 14:
+Started on day: 5
+ ended on day: 7
+*****************************
+*****************************
+
+Solution 3:
+Number of days needed: 16
+Meeting 0:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 1:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 2:
+Started on day: 4
+ ended on day: 5
+*****************************
+Meeting 3:
+Started on day: 4
+ ended on day: 7
+*****************************
+Meeting 4:
+Started on day: 8
+ ended on day: 10
+*****************************
+Meeting 5:
+Started on day: 2
+ ended on day: 5
+*****************************
+Meeting 6:
+Started on day: 8
+ ended on day: 10
+*****************************
+Meeting 7:
+Started on day: 11
+ ended on day: 13
+*****************************
+Meeting 8:
+Started on day: 14
+ ended on day: 15
+*****************************
+Meeting 9:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 10:
+Started on day: 9
+ ended on day: 11
+*****************************
+Meeting 11:
+Started on day: 12
+ ended on day: 15
+*****************************
+Meeting 12:
+Started on day: 6
+ ended on day: 8
+*****************************
+Meeting 13:
+Started on day: 6
+ ended on day: 7
+*****************************
+Meeting 14:
+Started on day: 11
+ ended on day: 13
+*****************************
+*****************************
+
+Solution 4:
+Number of days needed: 15
+Meeting 0:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 1:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 2:
+Started on day: 4
+ ended on day: 5
+*****************************
+Meeting 3:
+Started on day: 4
+ ended on day: 7
+*****************************
+Meeting 4:
+Started on day: 8
+ ended on day: 10
+*****************************
+Meeting 5:
+Started on day: 11
+ ended on day: 14
+*****************************
+Meeting 6:
+Started on day: 8
+ ended on day: 10
+*****************************
+Meeting 7:
+Started on day: 3
+ ended on day: 5
+*****************************
+Meeting 8:
+Started on day: 2
+ ended on day: 3
+*****************************
+Meeting 9:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 10:
+Started on day: 9
+ ended on day: 11
+*****************************
+Meeting 11:
+Started on day: 11
+ ended on day: 14
+*****************************
+Meeting 12:
+Started on day: 6
+ ended on day: 8
+*****************************
+Meeting 13:
+Started on day: 6
+ ended on day: 7
+*****************************
+Meeting 14:
+Started on day: 12
+ ended on day: 14
+*****************************
+*****************************
+
+Total number of solutions found: 4
+
+** Choco 4.0.2 (2017-01) : Constraint Programming Solver, Copyleft (c) 2010-2017
+- Model[Meeting] features:
+	Variables : 175
+	Constraints : 128
+	Default search strategy : no
+	Completed search strategy : no
+- Complete search - 4 solution(s) found.
+	Model[Meeting]
+	Solutions: 4
+	MINIMIZE makespan = 15,
+	Building time : 0.167s
+	Resolution time : 0.196s
+	Nodes: 390 (1,991.6 n/s)
+	Backtracks: 773
+	Fails: 383
+	Restarts: 0
+
+********************************************************************************************************
+
+ActivtyBasedSearch:
+
+Solution 1:
+Number of days needed: 19
+Meeting 0:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 1:
+Started on day: 2
+ ended on day: 4
+*****************************
+Meeting 2:
+Started on day: 17
+ ended on day: 18
+*****************************
+Meeting 3:
+Started on day: 14
+ ended on day: 17
+*****************************
+Meeting 4:
+Started on day: 5
+ ended on day: 7
+*****************************
+Meeting 5:
+Started on day: 2
+ ended on day: 5
+*****************************
+Meeting 6:
+Started on day: 7
+ ended on day: 9
+*****************************
+Meeting 7:
+Started on day: 16
+ ended on day: 18
+*****************************
+Meeting 8:
+Started on day: 10
+ ended on day: 11
+*****************************
+Meeting 9:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 10:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 11:
+Started on day: 10
+ ended on day: 13
+*****************************
+Meeting 12:
+Started on day: 7
+ ended on day: 9
+*****************************
+Meeting 13:
+Started on day: 5
+ ended on day: 6
+*****************************
+Meeting 14:
+Started on day: 13
+ ended on day: 15
+*****************************
+*****************************
+
+Solution 2:
+Number of days needed: 18
+Meeting 0:
+Started on day: 16
+ ended on day: 17
+*****************************
+Meeting 1:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 2:
+Started on day: 9
+ ended on day: 10
+*****************************
+Meeting 3:
+Started on day: 4
+ ended on day: 7
+*****************************
+Meeting 4:
+Started on day: 11
+ ended on day: 13
+*****************************
+Meeting 5:
+Started on day: 9
+ ended on day: 12
+*****************************
+Meeting 6:
+Started on day: 9
+ ended on day: 11
+*****************************
+Meeting 7:
+Started on day: 5
+ ended on day: 7
+*****************************
+Meeting 8:
+Started on day: 1
+ ended on day: 2
+*****************************
+Meeting 9:
+Started on day: 12
+ ended on day: 15
+*****************************
+Meeting 10:
+Started on day: 14
+ ended on day: 16
+*****************************
+Meeting 11:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 12:
+Started on day: 13
+ ended on day: 15
+*****************************
+Meeting 13:
+Started on day: 3
+ ended on day: 4
+*****************************
+Meeting 14:
+Started on day: 5
+ ended on day: 7
+*****************************
+*****************************
+
+Solution 3:
+Number of days needed: 17
+Meeting 0:
+Started on day: 9
+ ended on day: 10
+*****************************
+Meeting 1:
+Started on day: 3
+ ended on day: 5
+*****************************
+Meeting 2:
+Started on day: 15
+ ended on day: 16
+*****************************
+Meeting 3:
+Started on day: 12
+ ended on day: 15
+*****************************
+Meeting 4:
+Started on day: 1
+ ended on day: 3
+*****************************
+Meeting 5:
+Started on day: 4
+ ended on day: 7
+*****************************
+Meeting 6:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 7:
+Started on day: 11
+ ended on day: 13
+*****************************
+Meeting 8:
+Started on day: 14
+ ended on day: 15
+*****************************
+Meeting 9:
+Started on day: 3
+ ended on day: 6
+*****************************
+Meeting 10:
+Started on day: 6
+ ended on day: 8
+*****************************
+Meeting 11:
+Started on day: 8
+ ended on day: 11
+*****************************
+Meeting 12:
+Started on day: 8
+ ended on day: 10
+*****************************
+Meeting 13:
+Started on day: 13
+ ended on day: 14
+*****************************
+Meeting 14:
+Started on day: 0
+ ended on day: 2
+*****************************
+*****************************
+
+Solution 4:
+Number of days needed: 16
+Meeting 0:
+Started on day: 7
+ ended on day: 8
+*****************************
+Meeting 1:
+Started on day: 4
+ ended on day: 6
+*****************************
+Meeting 2:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 3:
+Started on day: 3
+ ended on day: 6
+*****************************
+Meeting 4:
+Started on day: 9
+ ended on day: 11
+*****************************
+Meeting 5:
+Started on day: 1
+ ended on day: 4
+*****************************
+Meeting 6:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 7:
+Started on day: 13
+ ended on day: 15
+*****************************
+Meeting 8:
+Started on day: 5
+ ended on day: 6
+*****************************
+Meeting 9:
+Started on day: 7
+ ended on day: 10
+*****************************
+Meeting 10:
+Started on day: 10
+ ended on day: 12
+*****************************
+Meeting 11:
+Started on day: 12
+ ended on day: 15
+*****************************
+Meeting 12:
+Started on day: 7
+ ended on day: 9
+*****************************
+Meeting 13:
+Started on day: 2
+ ended on day: 3
+*****************************
+Meeting 14:
+Started on day: 13
+ ended on day: 15
+*****************************
+*****************************
+
+Solution 5:
+Number of days needed: 15
+Meeting 0:
+Started on day: 4
+ ended on day: 5
+*****************************
+Meeting 1:
+Started on day: 9
+ ended on day: 11
+*****************************
+Meeting 2:
+Started on day: 13
+ ended on day: 14
+*****************************
+Meeting 3:
+Started on day: 11
+ ended on day: 14
+*****************************
+Meeting 4:
+Started on day: 8
+ ended on day: 10
+*****************************
+Meeting 5:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 6:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 7:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 8:
+Started on day: 11
+ ended on day: 12
+*****************************
+Meeting 9:
+Started on day: 7
+ ended on day: 10
+*****************************
+Meeting 10:
+Started on day: 6
+ ended on day: 8
+*****************************
+Meeting 11:
+Started on day: 3
+ ended on day: 6
+*****************************
+Meeting 12:
+Started on day: 5
+ ended on day: 7
+*****************************
+Meeting 13:
+Started on day: 3
+ ended on day: 4
+*****************************
+Meeting 14:
+Started on day: 0
+ ended on day: 2
+*****************************
+*****************************
+
+Total number of solutions found: 5
+
+** Choco 4.0.2 (2017-01) : Constraint Programming Solver, Copyleft (c) 2010-2017
+- Model[Meeting] features:
+	Variables : 175
+	Constraints : 128
+	Default search strategy : no
+	Completed search strategy : no
+- Complete search - 5 solution(s) found.
+	Model[Meeting]
+	Solutions: 5
+	MINIMIZE makespan = 15,
+	Building time : 0.233s
+	Resolution time : 0.334s
+	Nodes: 1,637 (4,901.2 n/s)
+	Backtracks: 82
+	Fails: 331
+	Restarts: 287
+
+*******************************************************************************************************
+
+ImpactBased:
+
+Solution 1:
+Number of days needed: 20
+Meeting 0:
+Started on day: 12
+ ended on day: 13
+*****************************
+Meeting 1:
+Started on day: 6
+ ended on day: 8
+*****************************
+Meeting 2:
+Started on day: 15
+ ended on day: 16
+*****************************
+Meeting 3:
+Started on day: 16
+ ended on day: 19
+*****************************
+Meeting 4:
+Started on day: 7
+ ended on day: 9
+*****************************
+Meeting 5:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 6:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 7:
+Started on day: 9
+ ended on day: 11
+*****************************
+Meeting 8:
+Started on day: 10
+ ended on day: 11
+*****************************
+Meeting 9:
+Started on day: 6
+ ended on day: 9
+*****************************
+Meeting 10:
+Started on day: 14
+ ended on day: 16
+*****************************
+Meeting 11:
+Started on day: 1
+ ended on day: 4
+*****************************
+Meeting 12:
+Started on day: 4
+ ended on day: 6
+*****************************
+Meeting 13:
+Started on day: 4
+ ended on day: 5
+*****************************
+Meeting 14:
+Started on day: 12
+ ended on day: 14
+*****************************
+*****************************
+
+Solution 2:
+Number of days needed: 19
+Meeting 0:
+Started on day: 5
+ ended on day: 6
+*****************************
+Meeting 1:
+Started on day: 15
+ ended on day: 17
+*****************************
+Meeting 2:
+Started on day: 15
+ ended on day: 16
+*****************************
+Meeting 3:
+Started on day: 15
+ ended on day: 18
+*****************************
+Meeting 4:
+Started on day: 8
+ ended on day: 10
+*****************************
+Meeting 5:
+Started on day: 10
+ ended on day: 13
+*****************************
+Meeting 6:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 7:
+Started on day: 7
+ ended on day: 9
+*****************************
+Meeting 8:
+Started on day: 1
+ ended on day: 2
+*****************************
+Meeting 9:
+Started on day: 6
+ ended on day: 9
+*****************************
+Meeting 10:
+Started on day: 3
+ ended on day: 5
+*****************************
+Meeting 11:
+Started on day: 1
+ ended on day: 4
+*****************************
+Meeting 12:
+Started on day: 4
+ ended on day: 6
+*****************************
+Meeting 13:
+Started on day: 10
+ ended on day: 11
+*****************************
+Meeting 14:
+Started on day: 12
+ ended on day: 14
+*****************************
+*****************************
+
+Solution 3:
+Number of days needed: 18
+Meeting 0:
+Started on day: 14
+ ended on day: 15
+*****************************
+Meeting 1:
+Started on day: 15
+ ended on day: 17
+*****************************
+Meeting 2:
+Started on day: 15
+ ended on day: 16
+*****************************
+Meeting 3:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 4:
+Started on day: 10
+ ended on day: 12
+*****************************
+Meeting 5:
+Started on day: 8
+ ended on day: 11
+*****************************
+Meeting 6:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 7:
+Started on day: 4
+ ended on day: 6
+*****************************
+Meeting 8:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 9:
+Started on day: 8
+ ended on day: 11
+*****************************
+Meeting 10:
+Started on day: 7
+ ended on day: 9
+*****************************
+Meeting 11:
+Started on day: 4
+ ended on day: 7
+*****************************
+Meeting 12:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 13:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 14:
+Started on day: 4
+ ended on day: 6
+*****************************
+*****************************
+
+Solution 4:
+Number of days needed: 17
+Meeting 0:
+Started on day: 14
+ ended on day: 15
+*****************************
+Meeting 1:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 2:
+Started on day: 15
+ ended on day: 16
+*****************************
+Meeting 3:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 4:
+Started on day: 10
+ ended on day: 12
+*****************************
+Meeting 5:
+Started on day: 8
+ ended on day: 11
+*****************************
+Meeting 6:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 7:
+Started on day: 4
+ ended on day: 6
+*****************************
+Meeting 8:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 9:
+Started on day: 8
+ ended on day: 11
+*****************************
+Meeting 10:
+Started on day: 7
+ ended on day: 9
+*****************************
+Meeting 11:
+Started on day: 4
+ ended on day: 7
+*****************************
+Meeting 12:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 13:
+Started on day: 15
+ ended on day: 16
+*****************************
+Meeting 14:
+Started on day: 4
+ ended on day: 6
+*****************************
+*****************************
+
+Solution 5:
+Number of days needed: 16
+Meeting 0:
+Started on day: 14
+ ended on day: 15
+*****************************
+Meeting 1:
+Started on day: 0
+ ended on day: 2
+*****************************
+Meeting 2:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 3:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 4:
+Started on day: 10
+ ended on day: 12
+*****************************
+Meeting 5:
+Started on day: 8
+ ended on day: 11
+*****************************
+Meeting 6:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 7:
+Started on day: 4
+ ended on day: 6
+*****************************
+Meeting 8:
+Started on day: 2
+ ended on day: 3
+*****************************
+Meeting 9:
+Started on day: 8
+ ended on day: 11
+*****************************
+Meeting 10:
+Started on day: 7
+ ended on day: 9
+*****************************
+Meeting 11:
+Started on day: 4
+ ended on day: 7
+*****************************
+Meeting 12:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 13:
+Started on day: 3
+ ended on day: 4
+*****************************
+Meeting 14:
+Started on day: 5
+ ended on day: 7
+*****************************
+*****************************
+
+Solution 6:
+Number of days needed: 15
+Meeting 0:
+Started on day: 7
+ ended on day: 8
+*****************************
+Meeting 1:
+Started on day: 9
+ ended on day: 11
+*****************************
+Meeting 2:
+Started on day: 13
+ ended on day: 14
+*****************************
+Meeting 3:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 4:
+Started on day: 10
+ ended on day: 12
+*****************************
+Meeting 5:
+Started on day: 0
+ ended on day: 3
+*****************************
+Meeting 6:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 7:
+Started on day: 5
+ ended on day: 7
+*****************************
+Meeting 8:
+Started on day: 8
+ ended on day: 9
+*****************************
+Meeting 9:
+Started on day: 8
+ ended on day: 11
+*****************************
+Meeting 10:
+Started on day: 2
+ ended on day: 4
+*****************************
+Meeting 11:
+Started on day: 4
+ ended on day: 7
+*****************************
+Meeting 12:
+Started on day: 12
+ ended on day: 14
+*****************************
+Meeting 13:
+Started on day: 0
+ ended on day: 1
+*****************************
+Meeting 14:
+Started on day: 4
+ ended on day: 6
+*****************************
+*****************************
+
+Total number of solutions found: 6
+
+** Choco 4.0.2 (2017-01) : Constraint Programming Solver, Copyleft (c) 2010-2017
+- Model[Meeting] features:
+	Variables : 175
+	Constraints : 128
+	Default search strategy : no
+	Completed search strategy : no
+- Complete search - 6 solution(s) found.
+	Model[Meeting]
+	Solutions: 6
+	MINIMIZE makespan = 15,
+	Building time : 0.160s
+	Resolution time : 0.089s
+	Nodes: 216 (2,416.0 n/s)
+	Backtracks: 421
+	Fails: 205
+	Restarts: 0
